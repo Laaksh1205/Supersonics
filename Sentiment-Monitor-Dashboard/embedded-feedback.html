@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Sentiment Dashboard with Feedback</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+  <link rel="stylesheet" href="styles.css">
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    /* Additional styles for feedback form */
+    .feedback-section {
+      grid-column: 1 / -1;
+      margin-top: 24px;
+    }
+    
+    .feedback-form {
+      background-color: var(--card-color);
+      border-radius: var(--border-radius);
+      box-shadow: var(--shadow);
+      padding: 20px;
+    }
+    
+    .form-header {
+      color: var(--primary-color);
+      font-size: 18px;
+      margin-bottom: 16px;
+      font-weight: 500;
+    }
+    
+    .form-description {
+      color: #666;
+      margin-bottom: 20px;
+      font-size: 14px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    
+    .rating-container {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .star {
+      color: #ffd700;
+      font-size: 32px;
+      cursor: pointer;
+    }
+    
+    .star.empty {
+      color: #e0e0e0;
+    }
+    
+    .emotion-selector {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .emotion-option {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: all 0.2s ease;
+    }
+    
+    .emotion-option.selected {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+    
+    .emotion-icon {
+      font-size: 40px;
+    }
+    
+    .happy { color: var(--positive-color); }
+    .neutral { color: var(--neutral-color); }
+    .unhappy { color: var(--negative-color); }
+    
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      font-family: 'Roboto', sans-serif;
+      resize: vertical;
+      min-height: 120px;
+    }
+    
+    .char-count {
+      text-align: right;
+      color: #666;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    
+    .submit-btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      padding: 10px 20px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    
+    .submit-btn:hover {
+      background-color: #303f9f;
+    }
+    
+    .success-message {
+      background-color: rgba(76, 175, 80, 0.1);
+      color: var(--positive-color);
+      padding: 16px;
+      border-radius: 4px;
+      margin-top: 16px;
+      text-align: center;
+    }
+    
+    .form-toggle-btn {
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      border-radius: var(--border-radius);
+      padding: 8px 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    
+    .form-toggle-btn:hover {
+      background-color: #303f9f;
+    }
+    
+    /* For mobile screens */
+    @media (max-width: 768px) {
+      .emotion-selector {
+        flex-direction: column;
+        gap: 8px;
+      }
+      
+      .emotion-option {
+        flex-direction: row;
+        gap: 8px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <h1>Event Sentiment Dashboard</h1>
+      <div class="header-actions">
+        <button class="refresh-btn" onclick="refreshData()">Refresh Data</button>
+        <div class="event-selector">
+          <label for="event-select">Event:</label>
+          <select id="event-select" onchange="changeEvent()">
+            <option value="tech-conference-2023">Tech Conference 2023</option>
+            <option value="music-festival">Music Festival</option>
+            <option value="corporate-summit">Corporate Summit</option>
+          </select>
+        </div>
+      </div>
+    </header>
+    
+    <main class="dashboard">
+      <section class="metrics-summary">
+        <div class="metric-card" id="overall-sentiment">
+          <h3>Overall Sentiment</h3>
+          <div class="chart-container">
+            <canvas id="sentimentPieChart"></canvas>
+          </div>
+          <div class="sentiment-summary">
+            <div class="sentiment-stat positive">
+              <span class="percentage" id="positive-percent">65%</span>
+              <span class="label">Positive</span>
+            </div>
+            <div class="sentiment-stat neutral">
+              <span class="percentage" id="neutral-percent">25%</span>
+              <span class="label">Neutral</span>
+            </div>
+            <div class="sentiment-stat negative">
+              <span class="percentage" id="negative-percent">10%</span>
+              <span class="label">Negative</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="metric-card" id="trend-analysis">
+          <h3>Sentiment Trend</h3>
+          <div class="chart-container">
+            <canvas id="sentimentTrendChart"></canvas>
+          </div>
+        </div>
+      </section>
+      
+      <section class="alerts-actions">
+        <div class="metric-card" id="active-alerts">
+          <h3>Active Alerts</h3>
+          <div class="alert-level-indicators">
+            <div class="alert-level high">
+              <span class="count">2</span>
+              <span class="label">High</span>
+            </div>
+            <div class="alert-level medium">
+              <span class="count">5</span>
+              <span class="label">Medium</span>
+            </div>
+            <div class="alert-level low">
+              <span class="count">12</span>
+              <span class="label">Low</span>
+            </div>
+          </div>
+          <div class="alerts-list" id="alerts-container">
+            <!-- Alerts will be populated here -->
+          </div>
+        </div>
+        
+        <div class="metric-card" id="quick-actions">
+          <h3>Quick Actions</h3>
+          <div class="action-buttons">
+            <button class="action-btn staff" onclick="dispatchStaff('entry')">
+              <span class="material-icons">person</span>
+              Dispatch to Entry
+            </button>
+            <button class="action-btn staff" onclick="dispatchStaff('food')">
+              <span class="material-icons">restaurant</span>
+              Dispatch to Food Area
+            </button>
+            <button class="action-btn announcement" onclick="makeAnnouncement()">
+              <span class="material-icons">campaign</span>
+              Make Announcement
+            </button>
+            <button class="action-btn technical" onclick="technicalSupport()">
+              <span class="material-icons">build</span>
+              Technical Support
+            </button>
+          </div>
+        </div>
+      </section>
+      
+      <section class="feedback-feed">
+        <div class="metric-card" id="live-feed">
+          <h3>Live Feedback Feed</h3>
+          <div class="feed-filters">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="twitter">Twitter</button>
+            <button class="filter-btn" data-filter="instagram">Instagram</button>
+            <button class="filter-btn" data-filter="app">In-App</button>
+          </div>
+          <div class="feed-container" id="feedback-container">
+            <!-- Feedback messages will be populated here -->
+          </div>
+        </div>
+      </section>
+      
+      <!-- Embedded Feedback Form Section -->
+      <section class="feedback-section">
+        <div class="metric-card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+            <h3>Submit Your Feedback</h3>
+            <button class="form-toggle-btn" id="form-toggle-btn">Show/Hide Form</button>
+          </div>
+          
+          <div id="feedback-form-container" style="display: block;">
+            <div class="feedback-form">
+              <p class="form-description">Your feedback helps us improve the event experience. All responses are anonymous.</p>
+              
+              <form id="feedbackForm">
+                <div class="form-group">
+                  <label class="form-label">How would you rate your experience?</label>
+                  <div class="rating-container">
+                    <span class="star material-icons" data-rating="1">star</span>
+                    <span class="star material-icons empty" data-rating="2">star</span>
+                    <span class="star material-icons empty" data-rating="3">star</span>
+                    <span class="star material-icons empty" data-rating="4">star</span>
+                    <span class="star material-icons empty" data-rating="5">star</span>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">How are you feeling about the event?</label>
+                  <div class="emotion-selector">
+                    <div class="emotion-option happy selected">
+                      <span class="emotion-icon material-icons">sentiment_satisfied_alt</span>
+                      <span>Happy</span>
+                    </div>
+                    <div class="emotion-option neutral">
+                      <span class="emotion-icon material-icons">sentiment_neutral</span>
+                      <span>Neutral</span>
+                    </div>
+                    <div class="emotion-option unhappy">
+                      <span class="emotion-icon material-icons">sentiment_very_dissatisfied</span>
+                      <span>Unhappy</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div class="form-group">
+                  <label class="form-label">Share your thoughts</label>
+                  <textarea 
+                    id="commentInput" 
+                    placeholder="What did you like? What could be improved?" 
+                    maxlength="500"
+                  ></textarea>
+                  <div class="char-count">
+                    <span id="charCount">0</span>/500 characters
+                  </div>
+                </div>
+                
+                <button type="submit" class="submit-btn">Submit Feedback</button>
+              </form>
+              
+              <div class="success-message" style="display: none;">
+                Thank you for your feedback!
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  
+  <script src="mockData.js"></script>
+  <script src="app.js"></script>
+  <script>
+    // Feedback form functionality
+    document.addEventListener('DOMContentLoaded', function() {
+      // Toggle feedback form visibility
+      const formToggleBtn = document.getElementById('form-toggle-btn');
+      const formContainer = document.getElementById('feedback-form-container');
+      
+      formToggleBtn.addEventListener('click', function() {
+        if (formContainer.style.display === 'none') {
+          formContainer.style.display = 'block';
+        } else {
+          formContainer.style.display = 'none';
+        }
+      });
+      
+      // Rating functionality
+      const stars = document.querySelectorAll('.star');
+      let currentRating = 1;
+      
+      stars.forEach(star => {
+        star.addEventListener('click', () => {
+          const rating = parseInt(star.dataset.rating);
+          currentRating = rating;
+          updateStars();
+        });
+      });
+      
+      function updateStars() {
+        stars.forEach(star => {
+          const rating = parseInt(star.dataset.rating);
+          if (rating <= currentRating) {
+            star.classList.remove('empty');
+          } else {
+            star.classList.add('empty');
+          }
+        });
+      }
+      
+      // Emotion selector
+      const emotions = document.querySelectorAll('.emotion-option');
+      let currentEmotion = 'happy';
+      
+      emotions.forEach(emotion => {
+        emotion.addEventListener('click', () => {
+          emotions.forEach(e => e.classList.remove('selected'));
+          emotion.classList.add('selected');
+          currentEmotion = emotion.classList[1]; // happy, neutral, or unhappy
+        });
+      });
+      
+      // Character counter
+      const commentInput = document.getElementById('commentInput');
+      const charCount = document.getElementById('charCount');
+      
+      commentInput.addEventListener('input', () => {
+        charCount.textContent = commentInput.value.length;
+      });
+      
+      // Form submission
+      const form = document.getElementById('feedbackForm');
+      const successMessage = document.querySelector('.success-message');
+      
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        
+        // Get form values
+        const feedback = {
+          rating: currentRating,
+          emotion: currentEmotion,
+          comment: commentInput.value,
+          timestamp: new Date().toISOString(),
+          eventId: document.getElementById('event-select').value || 'tech-conference-2023'
+        };
+        
+        console.log('Feedback submitted:', feedback);
+        
+        // In a real app, you would send this data to your server
+        
+        // Add the feedback to the feed immediately
+        addFeedbackToFeed(feedback);
+        
+        // Update sentiment percentages (simulate real-time update)
+        updateSentimentOnSubmission(feedback);
+        
+        // Show success message
+        form.style.display = 'none';
+        successMessage.style.display = 'block';
+        
+        // Reset form after 3 seconds
+        setTimeout(() => {
+          form.reset();
+          currentRating = 1;
+          updateStars();
+          emotions.forEach(e => e.classList.remove('selected'));
+          emotions[0].classList.add('selected');
+          commentInput.value = '';
+          charCount.textContent = '0';
+          form.style.display = 'block';
+          successMessage.style.display = 'none';
+        }, 3000);
+      });
+      
+      // Function to add feedback to the feed
+      function addFeedbackToFeed(feedback) {
+        const feedbackContainer = document.getElementById('feedback-container');
+        
+        // Create new feedback element
+        const feedbackElement = document.createElement('div');
+        feedbackElement.className = 'feed-item platform-app';
+        
+        // Map emotion to sentiment
+        let sentiment;
+        if (feedback.emotion === 'happy' || feedback.rating >= 4) {
+          sentiment = 'positive';
+        } else if (feedback.emotion === 'unhappy' || feedback.rating <= 2) {
+          sentiment = 'negative';
+        } else {
+          sentiment = 'neutral';
+        }
+        
+        // Format the timestamp
+        const timestamp = 'Just now';
+        
+        // User name is always 'you' for submitted feedback
+        const username = 'you';
+        
+        feedbackElement.innerHTML = `
+          <div class="feed-item-header">
+            <div class="feed-item-user">
+              <span class="material-icons">account_circle</span>
+              ${username}
+              <span class="feed-item-platform platform-app">app</span>
+            </div>
+            <span class="feed-item-time">${timestamp}</span>
+          </div>
+          <div class="feed-item-content">${feedback.comment}</div>
+          <span class="feed-item-sentiment sentiment-${sentiment}">${sentiment}</span>
+        `;
+        
+        // Add the new feedback to the top of the feed
+        feedbackContainer.prepend(feedbackElement);
+        
+        // Highlight the new item briefly
+        feedbackElement.style.backgroundColor = '#f0f8ff';
+        setTimeout(() => {
+          feedbackElement.style.backgroundColor = '';
+        }, 3000);
+      }
+      
+      // Function to update sentiment percentages on form submission
+      function updateSentimentOnSubmission(feedback) {
+        // Get current percentages
+        let positive = parseInt(document.getElementById('positive-percent').textContent);
+        let neutral = parseInt(document.getElementById('neutral-percent').textContent);
+        let negative = parseInt(document.getElementById('negative-percent').textContent);
+        
+        // Determine the sentiment category of the new feedback
+        let sentiment;
+        if (feedback.emotion === 'happy' || feedback.rating >= 4) {
+          sentiment = 'positive';
+        } else if (feedback.emotion === 'unhappy' || feedback.rating <= 2) {
+          sentiment = 'negative';
+        } else {
+          sentiment = 'neutral';
+        }
+        
+        // Update percentages (simplified for demo)
+        // In a real app, you would recalculate based on all feedback
+        if (sentiment === 'positive') {
+          positive = Math.min(positive + 2, 100);
+          neutral = Math.max(neutral - 1, 0);
+          negative = Math.max(negative - 1, 0);
+        } else if (sentiment === 'negative') {
+          negative = Math.min(negative + 2, 100);
+          positive = Math.max(positive - 1, 0);
+          neutral = Math.max(neutral - 1, 0);
+        } else {
+          neutral = Math.min(neutral + 2, 100);
+          positive = Math.max(positive - 1, 0);
+          negative = Math.max(negative - 1, 0);
+        }
+        
+        // Normalize to ensure total is 100%
+        const total = positive + neutral + negative;
+        positive = Math.round((positive / total) * 100);
+        neutral = Math.round((neutral / total) * 100);
+        negative = 100 - positive - neutral;
+        
+        // Update the display
+        document.getElementById('positive-percent').textContent = positive + '%';
+        document.getElementById('neutral-percent').textContent = neutral + '%';
+        document.getElementById('negative-percent').textContent = negative + '%';
+        
+        // Update the pie chart
+        // This would be handled by your app.js code
+        // For demo purposes, we'll simulate a refresh
+        refreshData();
+      }
+    });
+  </script>
+</body>
+</html> 

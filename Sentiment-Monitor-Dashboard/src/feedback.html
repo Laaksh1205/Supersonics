@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Feedback Form</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+  <style>
+    body {
+      font-family: 'Roboto', sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f5f7fa;
+    }
+    
+    #root {
+      margin: 0 auto;
+      max-width: 800px;
+      padding: 20px;
+    }
+    
+    .feedback-form {
+      background-color: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      padding: 20px;
+      margin-top: 20px;
+    }
+    
+    .form-header {
+      color: #3f51b5;
+      font-size: 24px;
+      margin-bottom: 16px;
+    }
+    
+    .form-description {
+      color: #666;
+      margin-bottom: 24px;
+    }
+    
+    .form-group {
+      margin-bottom: 20px;
+    }
+    
+    .form-label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 500;
+    }
+    
+    .rating-container {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .star {
+      color: #ffd700;
+      font-size: 32px;
+      cursor: pointer;
+    }
+    
+    .star.empty {
+      color: #e0e0e0;
+    }
+    
+    .emotion-selector {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    
+    .emotion-option {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+      opacity: 0.6;
+      transition: all 0.2s ease;
+    }
+    
+    .emotion-option.selected {
+      opacity: 1;
+      transform: scale(1.1);
+    }
+    
+    .emotion-icon {
+      font-size: 40px;
+    }
+    
+    .happy { color: #4caf50; }
+    .neutral { color: #ff9800; }
+    .unhappy { color: #f44336; }
+    
+    textarea {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      font-family: 'Roboto', sans-serif;
+      resize: vertical;
+      min-height: 120px;
+    }
+    
+    .char-count {
+      text-align: right;
+      color: #666;
+      font-size: 12px;
+      margin-top: 4px;
+    }
+    
+    .submit-btn {
+      background-color: #3f51b5;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      padding: 12px 24px;
+      font-size: 16px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.3s ease;
+    }
+    
+    .submit-btn:hover {
+      background-color: #303f9f;
+    }
+    
+    .success-message {
+      background-color: #e8f5e9;
+      color: #388e3c;
+      padding: 16px;
+      border-radius: 4px;
+      margin-top: 16px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <div id="root">
+    <div class="feedback-form">
+      <h2 class="form-header">Share Your Feedback</h2>
+      <p class="form-description">Your feedback helps us improve the event experience. All responses are anonymous.</p>
+      
+      <form id="feedbackForm">
+        <div class="form-group">
+          <label class="form-label">How would you rate your experience?</label>
+          <div class="rating-container">
+            <span class="star material-icons" data-rating="1">star</span>
+            <span class="star material-icons empty" data-rating="2">star</span>
+            <span class="star material-icons empty" data-rating="3">star</span>
+            <span class="star material-icons empty" data-rating="4">star</span>
+            <span class="star material-icons empty" data-rating="5">star</span>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">How are you feeling about the event?</label>
+          <div class="emotion-selector">
+            <div class="emotion-option happy selected">
+              <span class="emotion-icon material-icons">sentiment_satisfied_alt</span>
+              <span>Happy</span>
+            </div>
+            <div class="emotion-option neutral">
+              <span class="emotion-icon material-icons">sentiment_neutral</span>
+              <span>Neutral</span>
+            </div>
+            <div class="emotion-option unhappy">
+              <span class="emotion-icon material-icons">sentiment_very_dissatisfied</span>
+              <span>Unhappy</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label">Share your thoughts</label>
+          <textarea 
+            id="commentInput" 
+            placeholder="What did you like? What could be improved?" 
+            maxlength="500"
+          ></textarea>
+          <div class="char-count">
+            <span id="charCount">0</span>/500 characters
+          </div>
+        </div>
+        
+        <button type="submit" class="submit-btn">Submit Feedback</button>
+      </form>
+      
+      <div class="success-message" style="display: none;">
+        Thank you for your feedback!
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Rating functionality
+    const stars = document.querySelectorAll('.star');
+    let currentRating = 1;
+    
+    stars.forEach(star => {
+      star.addEventListener('click', () => {
+        const rating = parseInt(star.dataset.rating);
+        currentRating = rating;
+        updateStars();
+      });
+    });
+    
+    function updateStars() {
+      stars.forEach(star => {
+        const rating = parseInt(star.dataset.rating);
+        if (rating <= currentRating) {
+          star.classList.remove('empty');
+        } else {
+          star.classList.add('empty');
+        }
+      });
+    }
+    
+    // Emotion selector
+    const emotions = document.querySelectorAll('.emotion-option');
+    let currentEmotion = 'happy';
+    
+    emotions.forEach(emotion => {
+      emotion.addEventListener('click', () => {
+        emotions.forEach(e => e.classList.remove('selected'));
+        emotion.classList.add('selected');
+        currentEmotion = emotion.classList[1]; // happy, neutral, or unhappy
+      });
+    });
+    
+    // Character counter
+    const commentInput = document.getElementById('commentInput');
+    const charCount = document.getElementById('charCount');
+    
+    commentInput.addEventListener('input', () => {
+      charCount.textContent = commentInput.value.length;
+    });
+    
+    // Form submission
+    const form = document.getElementById('feedbackForm');
+    const successMessage = document.querySelector('.success-message');
+    
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      
+      // Get form values
+      const feedback = {
+        rating: currentRating,
+        emotion: currentEmotion,
+        comment: commentInput.value,
+        timestamp: new Date().toISOString(),
+        eventId: 'tech-conference-2023'
+      };
+      
+      console.log('Feedback submitted:', feedback);
+      
+      // In a real app, you would send this data to your server
+      // For demo purposes, we'll just show the success message
+      form.style.display = 'none';
+      successMessage.style.display = 'block';
+      
+      // Reset form after 3 seconds
+      setTimeout(() => {
+        form.reset();
+        currentRating = 1;
+        updateStars();
+        emotions.forEach(e => e.classList.remove('selected'));
+        emotions[0].classList.add('selected');
+        commentInput.value = '';
+        charCount.textContent = '0';
+        form.style.display = 'block';
+        successMessage.style.display = 'none';
+      }, 3000);
+    });
+  </script>
+</body>
+</html> 

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Event Sentiment Monitor Dashboard</title>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+  <link rel="stylesheet" href="styles.css">
+  <!-- Material UI CDN -->
+  <script src="https://unpkg.com/@material-ui/core@latest/umd/material-ui.development.js" crossorigin="anonymous"></script>
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+  <div class="app-container">
+    <header class="app-header">
+      <h1>Event Sentiment Dashboard</h1>
+      <div class="header-actions">
+        <button class="refresh-btn" onclick="refreshData()">Refresh Data</button>
+        <div class="event-selector">
+          <label for="event-select">Event:</label>
+          <select id="event-select" onchange="changeEvent()">
+            <option value="tech-conference-2023">Tech Conference 2023</option>
+            <option value="music-festival">Music Festival</option>
+            <option value="corporate-summit">Corporate Summit</option>
+          </select>
+        </div>
+      </div>
+    </header>
+    
+    <main class="dashboard">
+      <section class="metrics-summary">
+        <div class="metric-card" id="overall-sentiment">
+          <h3>Overall Sentiment</h3>
+          <div class="chart-container">
+            <canvas id="sentimentPieChart"></canvas>
+          </div>
+          <div class="sentiment-summary">
+            <div class="sentiment-stat positive">
+              <span class="percentage">65%</span>
+              <span class="label">Positive</span>
+            </div>
+            <div class="sentiment-stat neutral">
+              <span class="percentage">25%</span>
+              <span class="label">Neutral</span>
+            </div>
+            <div class="sentiment-stat negative">
+              <span class="percentage">10%</span>
+              <span class="label">Negative</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="metric-card" id="trend-analysis">
+          <h3>Sentiment Trend</h3>
+          <div class="chart-container">
+            <canvas id="sentimentTrendChart"></canvas>
+          </div>
+        </div>
+      </section>
+      
+      <section class="alerts-actions">
+        <div class="metric-card" id="active-alerts">
+          <h3>Active Alerts</h3>
+          <div class="alert-level-indicators">
+            <div class="alert-level high">
+              <span class="count">2</span>
+              <span class="label">High</span>
+            </div>
+            <div class="alert-level medium">
+              <span class="count">5</span>
+              <span class="label">Medium</span>
+            </div>
+            <div class="alert-level low">
+              <span class="count">12</span>
+              <span class="label">Low</span>
+            </div>
+          </div>
+          <div class="alerts-list" id="alerts-container">
+            <!-- Alerts will be populated here -->
+          </div>
+        </div>
+        
+        <div class="metric-card" id="quick-actions">
+          <h3>Quick Actions</h3>
+          <div class="action-buttons">
+            <button class="action-btn staff" onclick="dispatchStaff('entry')">
+              <span class="material-icons">person</span>
+              Dispatch to Entry
+            </button>
+            <button class="action-btn staff" onclick="dispatchStaff('food')">
+              <span class="material-icons">restaurant</span>
+              Dispatch to Food Area
+            </button>
+            <button class="action-btn announcement" onclick="makeAnnouncement()">
+              <span class="material-icons">campaign</span>
+              Make Announcement
+            </button>
+            <button class="action-btn technical" onclick="technicalSupport()">
+              <span class="material-icons">build</span>
+              Technical Support
+            </button>
+          </div>
+        </div>
+      </section>
+      
+      <section class="feedback-feed">
+        <div class="metric-card" id="live-feed">
+          <h3>Live Feedback Feed</h3>
+          <div class="feed-filters">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="twitter">Twitter</button>
+            <button class="filter-btn" data-filter="instagram">Instagram</button>
+            <button class="filter-btn" data-filter="app">In-App</button>
+          </div>
+          <div class="feed-container" id="feedback-container">
+            <!-- Feedback messages will be populated here -->
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+  
+  <script src="mockData.js"></script>
+  <script src="app.js"></script>
+</body>
+</html> 
